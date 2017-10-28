@@ -1,0 +1,49 @@
+\documentclass{article}
+
+\begin{document}
+
+\title{Prox}
+\maketitle
+
+\section{General Overview}
+The goal of this application is to be able to share your location with friends if and only if you are in "close proximity" with each other while keeping locational privacy. Specifically, no central server should ever see your location, your friends that are far away cannot see your location, and anybody who is not your friend cannot see your location.
+
+Any information sent to any server is considered \textbf{entirely public}; meaning, all communication can be made on an insecure connection. Each exchange of information between server and clients needs to be encrypted in a very specific way.
+
+\section{Primitives}
+
+\subsection{Making an account}
+
+
+\subsection{Making friends}
+To initiate a friendship, a user requests that the server send the friend a request. If confirmed, they begin communicating through the server's messenger.
+
+Once the two users have a line of communication through the server, they use Diffie-Hellman key exchange with this modulus to agree on a shared secret friendship key $a$. To perform the matching point test, a user multiplies his location by $a$ modulo $p$.
+
+\subsection{Matching point test}
+
+Consider two parties with secrets $l_1$ and $l_2$ and a large public prime $p$.
+The following procedure will allow one participant to know the truthness of the statement $l_1 = l_2$ without either gaining insight on the value of $l_1$, $l_2$. Additionally, any party without knowledge of $l_1, l_2$ given each communication cannot recover the truthness of the statement $l_1 = l_2$.
+
+% find a better way to write that
+A finds out $l_1=l_2$.
+
+\begin{itemize}
+    \item Each party picks secret random $k_1, k_2$ relatively prime with $p-1$.
+    
+    \item A sends $l_1^{k_1}$.
+    
+    \item B sends $l_2^{k_2}$ and $l_1^{k_1 k_2}$.
+    
+    \item A calculates $l_2^{k_2 k_1}$ and compares it with $l_1^{k_1 k_2}$.
+    
+\end{itemize}
+
+Repeat this procedure going the other direction.
+
+
+
+
+
+
+\end{document}
