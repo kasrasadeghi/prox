@@ -12,13 +12,36 @@ Any information sent to any server is considered \textbf{entirely public}; meani
 
 \section{Primitives}
 
-\subsection{Making an account}
+\subsection{A user}
+A user's local storage contains the following:
 
+\begin{itemize}
+    \item Two large primes $p$ and $q$.
+    \item A public key $e$ relatively prime with $(p-1)(q-1)$.
+    \item A private key $d$ such that $ed \equiv 1 \pmod{(p-1)(q-1)}$.
+    \item A list of public keys we have initiated either a friendship request or a friendship with. 
+\end{itemize}
+
+\subsection{Making a request}
+
+There are several different types of requests, each with a request code $c$ and a message $M$.
+
+\begin{itemize}
+    \item $0$: Friend request from you to $p'q'$.
+    \begin{itemize}
+        \item $M=p'q'$
+    \end{itemize}
+    \item $1$: Friend confirmation
+    \begin{itemize}
+        \item $M=$
+    \end{itemize}
+    \item $2$: 
+\end{itemize}
+
+What is actually sent to the server is $(10M + c)^d \pmod{pq}$. The server receives the request and raises it.
 
 \subsection{Making friends}
-To initiate a friendship, a user requests that the server send the friend a request. If confirmed, they begin communicating through the server's messenger.
-
-Once the two users have a line of communication through the server, they use Diffie-Hellman key exchange with this modulus to agree on a shared secret friendship key $a$. To perform the matching point test, a user multiplies his location by $a$ modulo $p$.
+To initiate a friendship, a user requests that the server send the possible friend a request, and signs the request. The server then stores the request on the recipient's queue until either the recipient saves the information or a short time expires. If the recipient confirms the request to the server, the server facilitates a Diffie-Hellman key exchange with modulus $p$ to agree on a shared secret friendship key $a$. To perform the matching point test, a user multiplies his location by $a$ modulo $p$.
 
 \subsection{Matching point test}
 
@@ -40,10 +63,5 @@ A finds out $l_1=l_2$.
 \end{itemize}
 
 Repeat this procedure going the other direction.
-
-
-
-
-
 
 \end{document}
