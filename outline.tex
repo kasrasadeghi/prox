@@ -1,4 +1,5 @@
 \documentclass{article}
+\usepackage{amsmath}
 
 \begin{document}
 
@@ -11,6 +12,7 @@ The goal of this application is to be able to share your location with friends i
 Any information sent to any server is considered \textbf{entirely public}; meaning, all communication can be made on an insecure connection. Each exchange of information between server and clients needs to be encrypted in a very specific way.
 
 \section{Primitives}
+One large public prime $P$ is determined at the inception of the project.
 
 \subsection{A user}
 A user's local storage contains the following:
@@ -18,50 +20,61 @@ A user's local storage contains the following:
 \begin{itemize}
     \item Two large primes $p$ and $q$.
     \item A public key $e$ relatively prime with $(p-1)(q-1)$.
-    \item A private key $d$ such that $ed \equiv 1 \pmod{(p-1)(q-1)}$.
+    \item A private key $d$ such that $ed \equiv 1 \mod{(p-1)(q-1)}$.
     \item A list of public keys we have initiated either a friendship request or a friendship with. 
 \end{itemize}
 
-\subsection{Making a request}
-
-There are several different types of requests, each with a request code $c$ and a message $M$.
-
+\noindent For each user, the server stores the following, and lets it be available to anyone:
 \begin{itemize}
-    \item $0$: Friend request from you to $p'q'$.
-    \begin{itemize}
-        \item $M=p'q'$
-    \end{itemize}
-    \item $1$: Friend confirmation
-    \begin{itemize}
-        \item $M=$
-    \end{itemize}
-    \item $2$: 
+    \item The product of the user's large primes, $pq$. This is the user's unique identifier.
+    \item The user's public key $e$.
+    \item A queue of all messages that were sent to that user. This is stored as a list $(c, p'q',2^{d'} \mod p'q', pq, M_1^{d'} \mod{p'q'},M_2^{d'} \mod{p'q'},...)$, where $c$ is the message type, $d'$ is the private key of the sender, $p'q'$ is the unique identifier of the sender, and $M_i$ are the numbers in the message.
 \end{itemize}
-
-What is actually sent to the server is $(10M + c)^d \pmod{pq}$. The server receives the request and raises it.
+\noindent The server clears all messages after they are alive for some short amount of time.
 
 \subsection{Making friends}
-To initiate a friendship, a user requests that the server send the possible friend a request, and signs the request. The server then stores the request on the recipient's queue until either the recipient saves the information or a short time expires. If the recipient confirms the request to the server, the server facilitates a Diffie-Hellman key exchange with modulus $p$ to agree on a shared secret friendship key $a$. To perform the matching point test, a user multiplies his location by $a$ modulo $p$.
+A requester initiates Diffie-Hellman exchange with the friend by sending a message of type 0. If the friend responds with a message of type 1, which includes the second part of the exchange, then they share a secret. See ``Sending messages".
+
+\subsection{Location}
+We apply the Gall-Peters projection on the longitude from the central meridian $\lambda$ and the latitude $\phi$, in degrees:
+$$x:=[R\lambda],$$
+$$y:=[2R \sin \phi],$$
+where $[]$ denotes the floor function and $R$ is an integer related to the radius of Earth. We then round $x$ and $y$ down to the nearest integer, and assign each location a number
+$$L(x,y):=x \text{ mod } 360R + 360R(y \text{ mod } 2R).$$
 
 \subsection{Matching point test}
+Consider two parties $A$ and $B$ with secrets $l'$ and $l$, respectively.
+The following procedure will allow $A$ to know the truthness of the statement $l' = l$ without either gaining insight on the values of $l'$, $l$. Additionally, any party without knowledge of $l', l$ given all communications cannot recover the truthness of the statement $l' = l$.
 
-Consider two parties with secrets $l_1$ and $l_2$ and a large public prime $p$.
-The following procedure will allow one participant to know the truthness of the statement $l_1 = l_2$ without either gaining insight on the value of $l_1$, $l_2$. Additionally, any party without knowledge of $l_1, l_2$ given each communication cannot recover the truthness of the statement $l_1 = l_2$.
+\begin{enumerate}
+    \item A requests the location of B, choosing a secret $k'$ relatively prime to $P-1$ and sending $l'^{k'} \pmod{P}$.
+    \item B chooses a secret $k$ relatively prime to $P-1$ and sends $l^{k} \pmod{P}$.
+    \item A sends $l^{k' k}$.
+    \item B calculates $l'^{k' k} \pmod{P}$ and compares it with $l^{k' k} \pmod{P}$.
+    \item If they are the same and B wants to say so, B responds with $l$.
+\end{enumerate}
 
-% find a better way to write that
-A finds out $l_1=l_2$.
-
+\subsection{Sending messages}
+There are several different types of messages, each with a type $c$ and a message $M$. Upon receipt of a message $(p'q',2^{d'} \mod p'q',pq,...)$, a user first queries the server database for $e'$ associated to $p'q'$, then evaluates $2^{d'e'}$ to confirm that it is $2$.
 \begin{itemize}
-    \item Each party picks secret random $k_1, k_2$ relatively prime with $p-1$.
-    
-    \item A sends $l_1^{k_1}$.
-    
-    \item B sends $l_2^{k_2}$ and $l_1^{k_1 k_2}$.
-    
-    \item A calculates $l_2^{k_2 k_1}$ and compares it with $l_1^{k_1 k_2}$.
-    
+    \item $0$: Friend request from $p'q'$ to $pq$. The sender generates random numbers $g,k'$ relatively prime to $P-1$. The message is
+    $$(p'q',2^{d'} \mod{p'q'}, pq, 0,g \mod{P},g^{k'} \mod{P}).$$
+    \item $1$: Friend confirmation of request from $p'q'$ to $pq$. The sender (of the confirmation) generates a random number $k$ relatively prime to $P-1$. The message is
+    $$(pq,2^d \mod{pq},p'q',1,g^k \mod{P}).$$
+    The friends now have a shared secret $s:=g^{k'k} \mod{P}$.
+    \item $2$: Location request from $p'q'$ to $pq$: Step 1 of the matching point test. The sender $p'q'$ generates a random number $k'$ relatively prime with $P-1$ and calculates $l'=s L' \pmod{P}$, where $L'$ is his location. The message is
+    $$(p'q',2^{d'} \mod{p'q'}, pq, 2, (l')^{k'} \mod{P}).$$
+    \item $3$: Location response of the matching point test: Step 2 of the matching point test. The sender (of the response) $pq$ generates a random number $k$ relatively prime with $P-1$ and calculates $l=sL \pmod{P}$, where $L$ is his location. The message is
+    $$(pq,2^d \mod{pq},p'q',3,l^k \mod{P}).$$
+    \item $4$: Step 3 of the matching point test. The message is
+    $$(p'q',2^{d'} \mod{p'q'}, pq, 4, l^{k'k} \mod{P}).$$
+    \item $5$: Step 5 of the matching point test. The message is
+    $$(pq,2^d \mod{pq},p'q',5,l \mod{P}).$$
 \end{itemize}
 
-Repeat this procedure going the other direction.
-
+\section{Things to do not described here}
+\begin{itemize}
+\item At the beginning of a friendship, the friends need to agree on a private key for encrypting all future messages. A user would then decrypt all of their messages by applying each of these keys to the first element in all messages, and seeing which ones ended up as identifiers for friends.
+\item We have to keep track of how long messages are alive for.
+\end{itemize}
 \end{document}
