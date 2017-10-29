@@ -55,21 +55,21 @@ The following procedure will allow $A$ to know the truthness of the statement $l
 \end{enumerate}
 
 \subsection{Sending messages}
-There are several different types of messages, each with a type $c$ and a message $M$. Upon receipt of a message $(p'q',2^{d'} \mod p'q',pq,...)$, a user first queries the server database for $e'$ associated to $p'q'$, then evaluates $2^{d'e'}$ to confirm that it is $2$.
+Upon receipt of a message $(c, p'q',2^{d'} \mod p'q',pq,...)$, a user first queries the server database for the $e'$ associated to $p'q'$, then evaluates $2^{d'e'}$ to confirm that it is $2$.
 \begin{itemize}
     \item $0$: Friend request from $p'q'$ to $pq$. The sender generates random numbers $g,k'$ relatively prime to $P-1$. The message is
-    $$(p'q',2^{d'} \mod{p'q'}, pq, 0,g \mod{P},g^{k'} \mod{P}).$$
+    $$(0, p'q',2^{d'} \mod{p'q'}, pq,g \mod{P},g^{k'} \mod{P}).$$
     \item $1$: Friend confirmation of request from $p'q'$ to $pq$. The sender (of the confirmation) generates a random number $k$ relatively prime to $P-1$. The message is
-    $$(pq,2^d \mod{pq},p'q',1,g^k \mod{P}).$$
+    $$(1, pq,2^d \mod{pq},p'q',g^k \mod{P}).$$
     The friends now have a shared secret $s:=g^{k'k} \mod{P}$.
     \item $2$: Location request from $p'q'$ to $pq$: Step 1 of the matching point test. The sender $p'q'$ generates a random number $k'$ relatively prime with $P-1$ and calculates $l'=s L' \pmod{P}$, where $L'$ is his location. The message is
-    $$(p'q',2^{d'} \mod{p'q'}, pq, 2, (l')^{k'} \mod{P}).$$
+    $$(2, p'q',2^{d'} \mod{p'q'}, pq, (l')^{k'} \mod{P}).$$
     \item $3$: Location response of the matching point test: Step 2 of the matching point test. The sender (of the response) $pq$ generates a random number $k$ relatively prime with $P-1$ and calculates $l=sL \pmod{P}$, where $L$ is his location. The message is
-    $$(pq,2^d \mod{pq},p'q',3,l^k \mod{P}).$$
+    $$(3, pq,2^d \mod{pq},p'q',l^k \mod{P}).$$
     \item $4$: Step 3 of the matching point test. The message is
-    $$(p'q',2^{d'} \mod{p'q'}, pq, 4, l^{k'k} \mod{P}).$$
+    $$(4, p'q',2^{d'} \mod{p'q'}, pq, l^{k'k} \mod{P}).$$
     \item $5$: Step 5 of the matching point test. The message is
-    $$(pq,2^d \mod{pq},p'q',5,l \mod{P}).$$
+    $$(5, pq,2^d \mod{pq},p'q',l \mod{P}).$$
 \end{itemize}
 
 \section{Things to do not described here}
