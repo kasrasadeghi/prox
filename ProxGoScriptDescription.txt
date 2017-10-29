@@ -1,0 +1,5 @@
+1. A user pings the server with a message which is a list containing the user's ID as the first element, the target ID as the second element, then some other data after it
+
+2. The server puts the message in the text file under the target's ID entry
+
+3. The server gives the user all of the information under his ID, and then deletes all that from the text file
