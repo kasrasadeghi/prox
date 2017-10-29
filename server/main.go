@@ -15,6 +15,7 @@ func main() {
 		panic("couldn't start listening: " + err.Error())
 	}
 	conns := clientConns(server)
+	go requestHandler()
 	for {
 		go handleConn(<-conns)
 	}
@@ -44,6 +45,25 @@ type UserRequest struct {
 	Data     string `json:"data"`
 }
 
+var requestChannel chan UserRequest
+var responseChannel chan []string
+
+//TODO: clearing
+//TODO: the response channel might mix up two requests.
+// maybe put a channel in the UserRequest struct and send back the response in that channel
+//TODO: the UserID may not be in the map, so we might return nil or some error case. we need to check for that
+
+func requestHandler() {
+	messages := make(map[string][]string)
+
+	for {
+		req := <-requestChannel
+		messages[req.TargetID] = append(messages[req.TargetID], req.Data)
+		result := messages[req.UserID]
+		responseChannel<-result
+	}
+}
+
 /* JSON format
 
 {
@@ -55,6 +75,7 @@ type UserRequest struct {
  */
 func handleConn(client net.Conn) {
 	d := json.NewDecoder(client)
+
 	for {
 		var msg UserRequest
 		err := d.Decode(&msg)
@@ -62,7 +83,16 @@ func handleConn(client net.Conn) {
 			fmt.Println(err.Error())
 		}
 
-		client.Write([]byte(msg.UserID + " says hello"))
+		requestChannel<-msg
+
+		response := <-responseChannel
+
+		bytes, err := json.Marshal(response)
+		if err != nil {
+			client.Write([]byte("json marshalling failed\n"))
+		} else {
+			client.Write(bytes)
+		}
 	}
 	client.Close()
 }
